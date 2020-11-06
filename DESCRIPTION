@@ -1,0 +1,16 @@
+Package: Phosphoproteome
+Title: Data analysis for Phosphoproteome
+Version: 1.0.0
+Authors@R: 
+    person(given = "Na",
+           family = "Li",
+           role = c("aut", "cre"),
+           email = "mjades@163.com",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: To label the phosphorylated sites in protein .fasta file.
+License: GPL (>= 2)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Depends: stringr,R (>= 2.10) 
