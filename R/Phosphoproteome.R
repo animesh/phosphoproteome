@@ -1,28 +1,26 @@
 #' Extract the phosphorylated proteins and the corresponding phosphorylated sites.
-#'
 #' Extract the phosphorylated proteins and the corresponding phosphorylated sites from the export .xlsx data created by Proteome Discovery 2.4
 #' Note: only the first protein and the first position will be be remained
 #' @param x A data.frame
 #' @return A data.frame in whcih the first column is the unique phosphorylated protein accession and the second column is the sum of the phosphorylated sites
 #' @import stringr
 #' @export
+
 PhosphorylatedProteinInformation<-function(x){
 
-  #############################################################################################
   ## x is one sheet of .xlsx file of phosphoproteome exported from Proteome Discovery 2.4.   ##
-  ## 目的：1. 提取`Modifications in Proteins`信息，并将其分成phosphoProtein和Site两列        ##
-  ##       2.  a. 同一个肽段匹配的protein>2的仅仅考虑第一个蛋白；                            ##
-  ##           b. 同一个肽段，在同一个protein中有多处匹配，仅考虑第一个匹配的区段；          ##
-  ## 输出：第一列为非冗余的protein name; 第二列为汇总的磷酸化位点信息，包括磷酸化的AA及打分。##
-  #############################################################################################
+  ## Purpose: 1. Extract `Modifications in Proteins` information and divide it into two columns, phosphoProtein and Site ##
+  ## 2. a. Only the first protein is considered if the protein>2 matches the same peptide; ##
+  ## b. The same peptide segment has multiple matches in the same protein, and only the first matching segment is considered; ##
+  ## Output: The first column is the non-redundant protein name; the second column is the summary phosphorylation site information, including phosphorylated AA and score. ##  #############################################################################################
 
-  # 1. 分成phosphoProtein和Site信息分成两列；
+  # 1. Divide the phosphoProtein and Site information into two columns;
   modification_1<-str_split(x$`Modifications in Proteins`," ",n=2,simplify = T) %>% data.frame(.,stringsAsFactors = F)
 
-  # 2. 多个蛋白和同一个蛋白多个位置匹配的情况，仅考虑第一个protein和滴哟个位点，此外，没有打分的位点也被删除部分，如 S/Y/T；
+  # 2. When multiple proteins are matched with multiple positions of the same protein, only the first protein and one site are considered. In addition, the sites that are not scored are also deleted, such as S/Y/T;
   modification_1$X2<-str_split(modification_1$X2,"]; ",n=2,simplify = T) %>% data.frame(.,stringsAsFactors = F) %>% .[,1]
 
-  # 3. 将数据整理为data.frame,第一列为非冗余的protein，第二列为磷酸化位点信息
+  # 3. Organize the data into data.frame, the first column is non-redundant protein, and the second column is phosphorylation site information
   stringPro<-modification_1[,1] %>% unique %>% na.omit
   ProDataFrame<-data.frame()
   for (j in 1:length(stringPro)){
@@ -34,7 +32,6 @@ PhosphorylatedProteinInformation<-function(x){
   return(ProDataFrame)
 }
 
-
 #' Merge some character into one character
 #'
 #' Merge the information of different phosphorylated sites in one protein into one row in a data.frame
@@ -42,12 +39,11 @@ PhosphorylatedProteinInformation<-function(x){
 #' @return a vector contains one character in which all the phosphorylated site information were recorded
 #' @export
 #'
+
 nrowToSingleString<-function(x){
 
-  ############################################################################################
-  ## 输入x为: 非facter类型的Data.frame，第一列为protein accession,第二列为磷酸化位点信息；  ##
-  ## 输出: protein相同的行合并为一行。                                                      ##
-  ############################################################################################
+  ## Input x is: non-facter type Data.frame, the first column is protein accession, the second column is phosphorylation site information; ##
+  ## Output: The lines with the same protein are merged into one line.               ##
 
   y=c()
   if (nrow(x)==1) {y=paste(x[1,2])}
@@ -63,14 +59,13 @@ nrowToSingleString<-function(x){
 #' @return a list which consist of data.frame, the name of each data.frame is the unique protein accession, the data.frame contains the separated site and phosphoScore and HighConfident
 #' @export
 #'
+
 sumHighConfidentSites<-function(x){
 
-  ####################################################################################################################
   ## x       is the result of PhosphorylatedProteinInformation,namely a data.frame containing one column of         ##
   ##         unique protein and all of the phosphorylated information.                                              ##
   ## export  a list which consist of data.frame, the name of each data.frame is the unique protein accession,       ##
   ##         the data.frame contains the separated site and phosphoScore and HighConfident                          ##
-  ####################################################################################################################
 
   y<-x[,2]
   proList<-str_extract_all(y,"[STY]{1}[0-9]+\\([0-9]+\\.?[0-9]?\\)")
@@ -113,12 +108,10 @@ sumHighConfidentSites<-function(x){
 
 SummaryTotalPhosphosites<-function(x){
 
-  ###################################################################################################
   ## x       the result of sumSites,namely a list of all phosphorylated proteins。                 ##
   ## export   a data. frame contains Total phosphoSites,                                           ##
   ##                                 The most phosphorylated protein,                              ##
   ##                                 The number of phosphoSites of most phosphorylated protein.    ##
-  ####################################################################################################
 
   count<-vector()
   for (i in 1: length(x)){
@@ -141,10 +134,8 @@ SummaryTotalPhosphosites<-function(x){
 #' @export
 
 tolowerSpecificSite<-function(x,y){
-  ###############################################################################################
   ### x, y   vector，x is character, y is numeric, the position of AA, which will be tolower   ##
   ##  for example: x= c("ABEHUI"), y=c(1,4,5)                                                  ##
-  ###############################################################################################
   if (isTRUE(is.na(x))){
     newAA<-NA
   }
@@ -166,11 +157,10 @@ tolowerSpecificSite<-function(x,y){
 #' @return  a fasta file of identified phosphorylated proteins, which was labeled with phosphorylated sites
 #' @export
 #'
+
 tolowerPhosphoSitesinFasta<-function(x,fasta){
-  ###############################################################################################################
   ## x       a list, the result of sumHighConfidentSites                                                                    ##
   ## export  a fasta file of identified phosphorylated proteins, which was labeled with phosphorylated sites   ##
-  ###############################################################################################################
   position<-list()
   fastaPro<-list()
   newfastaPro<-list()
@@ -193,4 +183,3 @@ tolowerPhosphoSitesinFasta<-function(x,fasta){
   names(newfastaPro)<-names(x)
   return(newfastaPro)
 }
-
